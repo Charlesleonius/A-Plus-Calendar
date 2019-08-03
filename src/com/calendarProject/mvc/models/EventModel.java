@@ -1,3 +1,6 @@
+/*
+ * Authored By: Hansol Kim
+ */
 package com.calendarProject.mvc.models;
 
 public class EventModel {

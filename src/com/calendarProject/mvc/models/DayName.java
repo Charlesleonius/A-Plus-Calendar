@@ -1,3 +1,6 @@
+/*
+ * Authored By: Yongen Chen
+ */
 package com.calendarProject.mvc.models;
 
 import java.util.ArrayList;

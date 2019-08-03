@@ -1,10 +1,12 @@
+/***
+ * Authored By: Hansol Kim, Charles Leon
+ */
 package com.calendarProject.mvc.views;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.time.LocalTime;
 import java.time.Month;
 import java.util.Calendar;
 import javax.swing.JButton;
@@ -56,16 +58,18 @@ public class CalendarEventView implements ActionListener {
 	private JLabel lblMmddyyyy;
 	private JButton agendaButton;
 
-	/**
-	 * Default View..
+	/***
+	 * Sets the controller for the view and creates the main UI
 	 */
 	public CalendarEventView(CalendarEventController controller) {
-		
 		this.controller = controller;
 		creatingFrame();
-		
 	}
 
+	/***
+	 * Handles all events in the main UI
+	 * @param e The action event that's taken place
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == todayButton) {
@@ -97,44 +101,56 @@ public class CalendarEventView implements ActionListener {
 			};
 			int option = JOptionPane.showConfirmDialog(null, message, "Add Event", JOptionPane.OK_CANCEL_OPTION);
 			if (option == JOptionPane.OK_OPTION) {
-				int startH = Integer.parseInt(startTimeField.getText());
-				int endH = Integer.parseInt(endTimeField.getText());
-				if (!titleField.getText().isEmpty() && startH < endH && startH > 0 && startH <= 23 && endH > 0 && endH <= 24) {
-					Calendar calendar = controller.getGregorianCalendar().getCalendar();
-					if (controller.addEventModel(new EventModel(titleField.getText(),
-							new DateData(calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONDAY),
-									calendar.get(Calendar.YEAR), startH, endH)))) {
-						JOptionPane.showMessageDialog(null, "Event added Successfully.");
+				try {
+					int startH = Integer.parseInt(startTimeField.getText());
+					int endH = Integer.parseInt(endTimeField.getText());
+					if (!titleField.getText().isEmpty() && startH < endH && startH > 0 && startH <= 23 && endH > 0 && endH <= 24) {
+						Calendar calendar = controller.getGregorianCalendar().getCalendar();
+						if (controller.addEventModel(new EventModel(titleField.getText(),
+								new DateData(calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONDAY),
+										calendar.get(Calendar.YEAR), startH, endH)))) {
+							JOptionPane.showMessageDialog(null, "Event added Successfully.");
+						} else {
+							JOptionPane.showMessageDialog(null, "Event Failed to add due to clash with other events.");
+						}
 					} else {
-						JOptionPane.showMessageDialog(null, "Event Failed to add due to clash with other events.");
+						JOptionPane.showMessageDialog(null, "Event Details should be valid.");
 					}
-				} else {
-					JOptionPane.showMessageDialog(null, "Event Details should be valid.");
+					this.eventsDisplay.setText(controller.getEventDetails(CalendarEventController.EVENTS_FOR_DAY));
+					this.selectGranularityButton(this.dayButton);
+				} catch (NumberFormatException nfe) {
+					JOptionPane.showMessageDialog(null, "Start and end time should be a number between 0-24");
 				}
-				this.eventsDisplay.setText(controller.getEventDetails(CalendarEventController.EVENTS_FOR_DAY));
 			}
 		} else if (e.getSource() == dayButton) {
+			this.controller.setSelectedEventGranularity(CalendarEventController.EVENTS_FOR_DAY);
 			this.eventsDisplay.setText(controller.getEventDetails(CalendarEventController.EVENTS_FOR_DAY));
+			selectGranularityButton(dayButton);
 		} else if (e.getSource() == monthButton) {
+			this.controller.setSelectedEventGranularity(CalendarEventController.EVENTS_FOR_MONTH);
 			this.eventsDisplay.setText(controller.getEventDetails(CalendarEventController.EVENTS_FOR_MONTH));
+			selectGranularityButton(monthButton);
 		} else if (e.getSource() == weekButton) {
+			this.controller.setSelectedEventGranularity(CalendarEventController.EVENTS_FOR_WEEK);
 			this.eventsDisplay.setText(controller.getEventDetails(CalendarEventController.EVENTS_FOR_WEEK));
+			selectGranularityButton(weekButton);
 		} else if (e.getSource() == agendaButton){
-		try {
-			Calendar calendarStart = Calendar.getInstance();
-			Calendar calendarEnd = Calendar.getInstance();
-			String[] startCalendarArray = agendStart.getText().split("/");
-			String[] endCalendarArray = agendaEnd.getText().split("/");
-			calendarStart.set(Calendar.MONTH, (Integer.parseInt(startCalendarArray[0]) - 1));
-			calendarStart.set(Calendar.DAY_OF_MONTH, (Integer.parseInt(startCalendarArray[1])));
-			calendarStart.set(Calendar.YEAR, (Integer.parseInt(startCalendarArray[2])));
-			calendarEnd.set(Calendar.MONTH, (Integer.parseInt(endCalendarArray[0]) - 1));
-			calendarEnd.set(Calendar.DAY_OF_MONTH, (Integer.parseInt(endCalendarArray[1])));
-			calendarEnd.set(Calendar.YEAR, (Integer.parseInt(endCalendarArray[2])));
-			this.eventsDisplay.setText(controller.getEventDetailsAgenda(calendarStart, calendarEnd));
-		} catch(Exception ex) {
-			JOptionPane.showMessageDialog(null, "Format for Date is MM/DD/YYYY");
-		}
+			try {
+				Calendar calendarStart = Calendar.getInstance();
+				Calendar calendarEnd = Calendar.getInstance();
+				String[] startCalendarArray = agendStart.getText().split("/");
+				String[] endCalendarArray = agendaEnd.getText().split("/");
+				calendarStart.set(Calendar.MONTH, (Integer.parseInt(startCalendarArray[0]) - 1));
+				calendarStart.set(Calendar.DAY_OF_MONTH, (Integer.parseInt(startCalendarArray[1])));
+				calendarStart.set(Calendar.YEAR, (Integer.parseInt(startCalendarArray[2])));
+				calendarEnd.set(Calendar.MONTH, (Integer.parseInt(endCalendarArray[0]) - 1));
+				calendarEnd.set(Calendar.DAY_OF_MONTH, (Integer.parseInt(endCalendarArray[1])));
+				calendarEnd.set(Calendar.YEAR, (Integer.parseInt(endCalendarArray[2])));
+				this.eventsDisplay.setText(controller.getEventDetailsAgenda(calendarStart, calendarEnd));
+				this.selectGranularityButton(this.agendaButton);
+			} catch(Exception ex) {
+				JOptionPane.showMessageDialog(null, "Format for Date is MM/DD/YYYY");
+			}
 	} else if (e.getSource() == fromFileButton){
 			JFileChooser jFileChooser = new JFileChooser();
 			if (jFileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -148,8 +164,25 @@ public class CalendarEventView implements ActionListener {
 			this.updateGoogleCalendar(controller.getGregorianCalendar().getCalendarForDay(this.currentDayValue));
 		}
 	}
-	
-	public void updateGoogleCalendar(Calendar calendar) {
+
+	/***
+	 * Sets the chosen granularity of the event view to be highlighted and normalizes the unselected options
+	 * @param granularityButton The granularity button to be selected
+	 */
+	private void selectGranularityButton(JButton granularityButton) {
+		JButton[] jButtons = {dayButton, monthButton, weekButton, agendaButton};
+		for (JButton button : jButtons)
+			if (button == granularityButton)
+				button.setBackground(new Color(130,212,255));
+			else
+				button.setBackground(Color.lightGray);
+	}
+
+	/***
+	 * Regenerates the calendar based on the number of days in the month and updates the event view based on the selected day
+	 * @param calendar Any day of the year for which to set the calendar
+	 */
+	private void updateGoogleCalendar(Calendar calendar) {
 		
 		int xAxisIndex = 0;
 		calendar.set(Calendar.DAY_OF_MONTH, 1);
@@ -177,8 +210,14 @@ public class CalendarEventView implements ActionListener {
 		monthYearTitle.setText(
 				Month.of(calendar.get(Calendar.MONTH) + 1) + " " +calendar.get(Calendar.YEAR)
 		);
+		if (this.controller.getSelectedEventGranularity() == CalendarEventController.EVENTS_FOR_AGENDA)
+			this.controller.setSelectedEventGranularity(CalendarEventController.EVENTS_FOR_DAY);
+		this.eventsDisplay.setText(controller.getEventDetails(this.controller.getSelectedEventGranularity()));
 	}
-	
+
+	/***
+	 * Clears all JButtons representing days in the calendar
+	 */
 	private void resetCalendarButtons() {
 		for (int i = 0; i < 6; i++) {
 			for (int j = 0; j < 7; j++) {
@@ -187,7 +226,10 @@ public class CalendarEventView implements ActionListener {
 			}
 		}
 	}
-	
+
+	/***
+	 * Creates the UI of the application
+	 */
 	private void creatingFrame() {
 		frame = new JFrame();
 		frame.setTitle("A+ Calendar");
@@ -258,44 +300,40 @@ public class CalendarEventView implements ActionListener {
 		dayButton = new JButton("Day");
 		dayButton.addActionListener(this);
 		dayButton.setBackground(Color.WHITE);
-		dayButton.setBounds(406, 50, 60, 60);
+		dayButton.setBounds(416, 50, 60, 60);
+		dayButton.setOpaque(true);
 		mainPanel.add(dayButton);
-		
+
 		monthButton = new JButton("Month");
 		monthButton.addActionListener(this);
 		monthButton.setBackground(Color.WHITE);
-		monthButton.setBounds(471, 50, 60, 60);
+		monthButton.setBounds(481, 50, 60, 60);
+		monthButton.setOpaque(true);
 		mainPanel.add(monthButton);
 		
 		weekButton = new JButton("Week");
 		weekButton.addActionListener(this);
 		weekButton.setBackground(Color.WHITE);
-		weekButton.setBounds(536, 50, 60, 60);
+		weekButton.setBounds(546, 50, 60, 60);
+		weekButton.setOpaque(true);
 		mainPanel.add(weekButton);
 
 		fromFileButton = new JButton("From File");
 		fromFileButton.addActionListener(this);
 		fromFileButton.setBackground(Color.WHITE);
-		fromFileButton.setBounds(602, 50, 164, 60);
+		fromFileButton.setBounds(612, 50, 154, 60);
 		mainPanel.add(fromFileButton);
 		
 		eventsDisplay = new JTextArea();
 		eventsDisplay.setEditable(false);
 		eventsDisplay.setBounds(416, 122, 344, 258);
 		addEventButton = new JButton("Add Event");
-		addEventButton.setBackground(new Color(130,212,255));
+		addEventButton.setBackground(new Color(130,212,130));
 		addEventButton.setOpaque(true);
 		addEventButton.setBounds(416, 380, 344, 50);
 		addEventButton.addActionListener(this);
 		mainPanel.add(addEventButton);
 		mainPanel.add(eventsDisplay);
-		
-		monthYearTitle = new JLabel("Month: 1 - Year: 2019");
-		monthYearTitle.setFont(new Font("Lucida Grande", Font.BOLD, 20));
-		monthYearTitle.setHorizontalAlignment(SwingConstants.CENTER);
-		monthYearTitle.setForeground(Color.WHITE);
-		monthYearTitle.setBounds(30, 145, 374, 25);
-		mainPanel.add(monthYearTitle);
 
 		/* Agenda UI */
 		lblMmddyyyy = new JLabel("MM/DD/YYYY");
@@ -327,8 +365,18 @@ public class CalendarEventView implements ActionListener {
 		agendaButton.addActionListener(this);
 		agendaButton.setBackground(Color.WHITE);
 		agendaButton.setBounds(772, 280, 100, 40);
+		agendaButton.setOpaque(true);
 		mainPanel.add(agendaButton);
 		/* End Agenda UI */
+
+		/* Month/Year Header */
+		monthYearTitle = new JLabel("Month: 1 - Year: 2019");
+		monthYearTitle.setFont(new Font("Lucida Grande", Font.BOLD, 20));
+		monthYearTitle.setHorizontalAlignment(SwingConstants.CENTER);
+		monthYearTitle.setForeground(Color.WHITE);
+		monthYearTitle.setBounds(30, 145, 374, 25);
+		mainPanel.add(monthYearTitle);
+		/* End Month/Year Header */
 
 		/* Weekday Headers */
 		DayName[] dayNames = DayName.values();
@@ -343,17 +391,18 @@ public class CalendarEventView implements ActionListener {
 			mainPanel.add(week[i]);
 		
 		}
-		/* End Weekday Hears */
+		/* End Weekday Headers */
 
-		addingButtons();
+		addDayButtons(); //Create days of the month
+		dayButton.doClick(); //Set event granularity to default day
 		this.frame.setVisible(true);
 		
 	}
 	
-	/**
-	 * Adding buttons for each day of the month into the calendar panel.
+	/***
+	 * Adds buttons for each day of the month into the calendar panel.
 	 */
-	private void addingButtons() {
+	private void addDayButtons() {
 		int yAxis = 230;
 		dayNumber = new JButton[6][7];
 		for (int i = 0; i < 6; i++) { //Rows
@@ -363,8 +412,8 @@ public class CalendarEventView implements ActionListener {
 				dayNumber[i][j].setBounds(xAxis, yAxis, 50, 35);
 				dayNumber[i][j].setBackground(Color.WHITE);
 				dayNumber[i][j].setOpaque(true);
-				dayNumber[i][j].addActionListener(this);
 				mainPanel.add(dayNumber[i][j]);
+				dayNumber[i][j].setEnabled(false);
 				xAxis += 55;
 			}
 			yAxis += 40;
