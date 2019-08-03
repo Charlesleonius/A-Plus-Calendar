@@ -1,5 +1,5 @@
-.idea
-.project
-.settings
-out
+.idea/
+.project/
+.settings/
+out/
 .DS_Store
